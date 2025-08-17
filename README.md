@@ -6,11 +6,13 @@ A sophisticated AI-powered fashion and nail expert that provides personalized re
 
 ## Features
 
+- 🤖 **AI-Enhanced Recommendations**: Optional OpenAI integration for smarter suggestions
 - 🎨 **Extensive Color Palette**: 15+ color families with 5 unique shades each
 - 💅 **Polish Type Variety**: Polygel, Gel, Dip Powder, Acrylic, Regular, Matte, Glossy, Shellac
 - 👗 **Smart Outfit Matching**: Considers outfit types, colors, and occasions
 - 🔄 **Variation Algorithm**: Never repeats the same combinations
 - 📱 **REST API**: Easy integration with web and mobile apps
+- ⚡ **Dual Mode**: Works with or without OpenAI API key
 
 ## Quick Start
 
@@ -27,18 +29,53 @@ python --version
 pip install -r requirements.txt
 ```
 
-3. **Run the application**
+3. **Configure OpenAI (Optional)**
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env and add your OpenAI API key
+# OPENAI_API_KEY=sk-your-actual-api-key-here
+```
+
+4. **Run the application**
 ```bash
 python fashion_nail_ai.py
 ```
 
 The API will be available at `http://localhost:5000`
 
+### 🚀 **OpenAI Integration**
+
+The app now supports **two modes**:
+
+- **🤖 AI-Enhanced Mode**: Uses OpenAI GPT for smarter, more nuanced recommendations
+- **⚡ Classic Mode**: Uses the original rule-based algorithm (no API key needed)
+
+**To enable AI mode:**
+1. Get an OpenAI API key from [platform.openai.com](https://platform.openai.com)
+2. Add it to your `.env` file:
+```bash
+OPENAI_API_KEY=sk-your-actual-api-key-here
+```
+
+**Without an API key**, the app automatically falls back to the classic algorithm.
+
 ### API Usage
 
 #### Health Check
 ```bash
 curl http://localhost:5000/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "message": "Fashion & Nail AI is running",
+  "openai_enabled": true,
+  "ai_model": "gpt-3.5-turbo"
+}
 ```
 
 #### 1️⃣ Outfit → Nails Mode

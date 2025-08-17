@@ -1,10 +1,22 @@
 import json
 import random
+import os
 from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+import openai
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
+
+# OpenAI Configuration
+openai.api_key = os.getenv('OPENAI_API_KEY')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+OPENAI_MAX_TOKENS = int(os.getenv('OPENAI_MAX_TOKENS', '500'))
+OPENAI_TEMPERATURE = float(os.getenv('OPENAI_TEMPERATURE', '0.7'))
 
 @dataclass
 class ColorOption:
@@ -22,6 +34,8 @@ class OutfitOption:
 
 class FashionNailAI:
     def __init__(self):
+        self.use_openai = bool(os.getenv('OPENAI_API_KEY') and os.getenv('OPENAI_API_KEY') != 'your_openai_api_key_here')
+        
         # Color palette with specific shades and hex codes
         self.color_palette = {
             "Nude": {
@@ -115,6 +129,13 @@ class FashionNailAI:
     
     def outfit_to_nails(self, outfit_description: str, outfit_type: str) -> Dict[str, Any]:
         """Generate nail polish suggestions based on outfit."""
+        if self.use_openai:
+            return self._outfit_to_nails_openai(outfit_description, outfit_type)
+        else:
+            return self._outfit_to_nails_classic(outfit_description, outfit_type)
+    
+    def _outfit_to_nails_classic(self, outfit_description: str, outfit_type: str) -> Dict[str, Any]:
+        """Generate nail polish suggestions using classic algorithm."""
         # Determine appropriate colors based on outfit type and description
         classic_colors, bold_colors = self._get_colors_for_outfit(outfit_description, outfit_type)
         
@@ -152,8 +173,87 @@ class FashionNailAI:
             }
         }
     
+    def _outfit_to_nails_openai(self, outfit_description: str, outfit_type: str) -> Dict[str, Any]:
+        """Generate nail polish suggestions using OpenAI."""
+        try:
+            available_colors = list(self.color_palette.keys())
+            available_polish_types = self.polish_types
+            
+            prompt = f"""
+            You are a fashion and nail expert AI. Based on the outfit description and type provided, suggest nail polish options.
+            
+            Outfit: {outfit_description}
+            Outfit Type: {outfit_type}
+            
+            Available Colors: {', '.join(available_colors)}
+            Available Polish Types: {', '.join(available_polish_types)}
+            
+            Please suggest:
+            1. A CLASSIC option (neutral/safe color)
+            2. A BOLD option (vibrant/contrasting color)
+            
+            For each option, choose from the available colors and polish types.
+            Consider color theory, fashion matching, and the occasion.
+            
+            Respond ONLY with a JSON object in this exact format:
+            {{
+                "classic_color": "Color Name",
+                "bold_color": "Color Name"
+            }}
+            """
+            
+            response = openai.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=OPENAI_MAX_TOKENS,
+                temperature=OPENAI_TEMPERATURE
+            )
+            
+            ai_response = response.choices[0].message.content
+            ai_data = json.loads(ai_response)
+            
+            # Get specific shades and polish types for the AI-suggested colors
+            classic_color = ai_data.get('classic_color', 'Nude')
+            bold_color = ai_data.get('bold_color', 'Cherry Red')
+            
+            # Ensure colors are valid, fallback to default if not
+            if classic_color not in self.color_palette:
+                classic_color = 'Nude'
+            if bold_color not in self.color_palette:
+                bold_color = 'Cherry Red'
+            
+            classic_option = self.get_random_color_option(classic_color)
+            bold_option = self.get_random_color_option(bold_color)
+            
+            return {
+                "classic": {
+                    "name": classic_option.name,
+                    "shade": classic_option.shade,
+                    "hex": classic_option.hex,
+                    "polish_type": classic_option.polish_type
+                },
+                "bold": {
+                    "name": bold_option.name,
+                    "shade": bold_option.shade,
+                    "hex": bold_option.hex,
+                    "polish_type": bold_option.polish_type
+                }
+            }
+            
+        except Exception as e:
+            print(f"OpenAI API error: {e}")
+            # Fallback to classic algorithm
+            return self._outfit_to_nails_classic(outfit_description, outfit_type)
+    
     def nails_to_outfit(self, nail_color: str, nail_shade: str, polish_type: str) -> Dict[str, Any]:
         """Generate outfit suggestions based on nail polish."""
+        if self.use_openai:
+            return self._nails_to_outfit_openai(nail_color, nail_shade, polish_type)
+        else:
+            return self._nails_to_outfit_classic(nail_color, nail_shade, polish_type)
+    
+    def _nails_to_outfit_classic(self, nail_color: str, nail_shade: str, polish_type: str) -> Dict[str, Any]:
+        """Generate outfit suggestions using classic algorithm."""
         # Get outfit options that complement the nail color
         casual_options, dressy_options = self._get_outfits_for_nails(nail_color, nail_shade)
         
@@ -176,6 +276,57 @@ class FashionNailAI:
             "casual": casual_outfit,
             "dressy": dressy_outfit
         }
+    
+    def _nails_to_outfit_openai(self, nail_color: str, nail_shade: str, polish_type: str) -> Dict[str, Any]:
+        """Generate outfit suggestions using OpenAI."""
+        try:
+            prompt = f"""
+            You are a fashion and nail expert AI. Based on the nail polish provided, suggest outfit combinations.
+            
+            Nail Polish: {nail_color} - {nail_shade} ({polish_type})
+            
+            Please suggest:
+            1. A CASUAL outfit (everyday wearable style)
+            2. A DRESSY outfit (elegant/evening style)
+            
+            For each outfit, specify: Top, Bottom, Shoes, Accessories
+            
+            Consider color coordination, style matching, and fashion principles.
+            Make the suggestions specific and stylish.
+            
+            Respond ONLY with a JSON object in this exact format:
+            {{
+                "casual": {{
+                    "top": "Top Name",
+                    "bottom": "Bottom Name", 
+                    "shoes": "Shoes Name",
+                    "accessories": "Accessories Description"
+                }},
+                "dressy": {{
+                    "top": "Top Name",
+                    "bottom": "Bottom Name",
+                    "shoes": "Shoes Name", 
+                    "accessories": "Accessories Description"
+                }}
+            }}
+            """
+            
+            response = openai.chat.completions.create(
+                model=OPENAI_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=OPENAI_MAX_TOKENS,
+                temperature=OPENAI_TEMPERATURE
+            )
+            
+            ai_response = response.choices[0].message.content
+            ai_data = json.loads(ai_response)
+            
+            return ai_data
+            
+        except Exception as e:
+            print(f"OpenAI API error: {e}")
+            # Fallback to classic algorithm
+            return self._nails_to_outfit_classic(nail_color, nail_shade, polish_type)
     
     def _get_colors_for_outfit(self, outfit_description: str, outfit_type: str) -> Tuple[List[str], List[str]]:
         """Determine appropriate nail colors based on outfit."""
@@ -317,7 +468,12 @@ def get_fashion_advice():
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint."""
-    return jsonify({"status": "healthy", "message": "Fashion & Nail AI is running"})
+    return jsonify({
+        "status": "healthy", 
+        "message": "Fashion & Nail AI is running",
+        "openai_enabled": fashion_ai.use_openai,
+        "ai_model": OPENAI_MODEL if fashion_ai.use_openai else "Classic Algorithm"
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
