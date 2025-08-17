@@ -3,7 +3,7 @@ import random
 import os
 from typing import Dict, List, Tuple, Any
 from dataclasses import dataclass
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 import openai
 
@@ -426,6 +426,11 @@ class FashionNailAI:
 
 # Initialize the AI
 fashion_ai = FashionNailAI()
+
+@app.route('/')
+def index():
+    """Serve the web interface."""
+    return render_template('index.html')
 
 @app.route('/fashion-advice', methods=['POST'])
 def get_fashion_advice():
