@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion & Nail AI 💅✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: #e9ecef;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .tab:hover {
+            background: #dee2e6;
+        }
+        
+        .tab.active:hover {
+            background: white;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 15px;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            vertical-align: middle;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .status {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Fashion & Nail AI 💅✨</h1>
+            <p>Get personalized nail polish and outfit recommendations</p>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('outfit-to-nails')">
+                👗 Outfit → Nails
+            </button>
+            <button class="tab" onclick="switchTab('nails-to-outfit')">
+                💅 Nails → Outfit
+            </button>
+        </div>
+        
+        <div class="content">
+            <!-- Outfit to Nails Tab -->
+            <div id="outfit-to-nails" class="tab-content active">
+                <h2 style="margin-bottom: 20px; color: #333;">Get Nail Polish Suggestions</h2>
+                <form id="outfitForm">
+                    <div class="form-group">
+                        <label for="outfitDescription">Describe your outfit:</label>
+                        <textarea 
+                            id="outfitDescription" 
+                            placeholder="e.g., Black elegant evening dress with silver jewelry"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="outfitType">Outfit Type:</label>
+                        <select id="outfitType" required>
+                            <option value="">Select outfit type...</option>
+                            <option value="Dresses">Dresses</option>
+                            <option value="Skirts">Skirts</option>
+                            <option value="Pants">Pants</option>
+                            <option value="Jeans">Jeans</option>
+                            <option value="Shorts">Shorts</option>
+                            <option value="Shirts">Shirts</option>
+                            <option value="Blouses">Blouses</option>
+                            <option value="Jackets">Jackets</option>
+                            <option value="Coats">Coats</option>
+                            <option value="Sweaters">Sweaters</option>
+                            <option value="T-Shirts">T-Shirts</option>
+                            <option value="Jumpsuits">Jumpsuits</option>
+                            <option value="Rompers">Rompers</option>
+                            <option value="Suits">Suits</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Get Nail Suggestions 💅</button>
+                </form>
+                
+                <div id="loading1" class="loading">
+                    <div class="spinner"></div>
+                    <p>Getting your perfect nail suggestions...</p>
+                </div>
+                
+                <div id="results1" class="results"></div>
+                <div id="error1" class="error"></div>
+            </div>
+            
+            <!-- Nails to Outfit Tab -->
+            <div id="nails-to-outfit" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #333;">Get Outfit Suggestions</h2>
+                <form id="nailsForm">
+                    <div class="form-group">
+                        <label for="nailColor">Nail Color:</label>
+                        <select id="nailColor" required>
+                            <option value="">Select nail color...</option>
+                            <option value="Nude">Nude</option>
+                            <option value="Sheer Pink">Sheer Pink</option>
+                            <option value="Coral">Coral</option>
+                            <option value="Cherry Red">Cherry Red</option>
+                            <option value="Burgundy">Burgundy</option>
+                            <option value="Lavender">Lavender</option>
+                            <option value="Mint Green">Mint Green</option>
+                            <option value="Sky Blue">Sky Blue</option>
+                            <option value="Electric Blue">Electric Blue</option>
+                            <option value="Gold">Gold</option>
+                            <option value="Silver">Silver</option>
+                            <option value="Rose">Rose</option>
+                            <option value="Plum">Plum</option>
+                            <option value="Tangerine">Tangerine</option>
+                            <option value="Hot Pink">Hot Pink</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nailShade">Nail Shade:</label>
+                        <input 
+                            type="text" 
+                            id="nailShade" 
+                            placeholder="e.g., Classic Cherry, Soft Pink, Deep Burgundy"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="polishType">Polish Type:</label>
+                        <select id="polishType" required>
+                            <option value="">Select polish type...</option>
+                            <option value="Polygel">Polygel</option>
+                            <option value="Gel">Gel</option>
+                            <option value="Dip Powder">Dip Powder</option>
+                            <option value="Acrylic">Acrylic</option>
+                            <option value="Regular Nail Polish">Regular Nail Polish</option>
+                            <option value="Matte">Matte</option>
+                            <option value="Glossy">Glossy</option>
+                            <option value="Shellac">Shellac</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Get Outfit Suggestions 👗</button>
+                </form>
+                
+                <div id="loading2" class="loading">
+                    <div class="spinner"></div>
+                    <p>Finding your perfect outfits...</p>
+                </div>
+                
+                <div id="results2" class="results"></div>
+                <div id="error2" class="error"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check API status on load
+        window.onload = function() {
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    const status = document.getElementById('status');
+                    status.style.display = 'block';
+                    status.innerHTML = `
+                        <strong>Status:</strong> ${data.message}<br>
+                        <strong>AI Mode:</strong> ${data.openai_enabled ? '🤖 Enhanced (OpenAI)' : '⚡ Classic Algorithm'}<br>
+                        <strong>Model:</strong> ${data.ai_model}
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                });
+        };
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Handle outfit form submission
+        document.getElementById('outfitForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading1');
+            const results = document.getElementById('results1');
+            const error = document.getElementById('error1');
+            
+            // Show loading, hide results and errors
+            loading.classList.add('show');
+            results.classList.remove('show');
+            error.classList.remove('show');
+            
+            const formData = {
+                mode: 'outfit_to_nails',
+                outfit_description: document.getElementById('outfitDescription').value,
+                outfit_type: document.getElementById('outfitType').value
+            };
+            
+            fetch('/fashion-advice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.remove('show');
+                
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.classList.add('show');
+                } else {
+                    displayNailResults(data);
+                }
+            })
+            .catch(err => {
+                loading.classList.remove('show');
+                error.textContent = 'Error connecting to the server. Make sure the API is running.';
+                error.classList.add('show');
+            });
+        });
+
+        // Handle nails form submission
+        document.getElementById('nailsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('loading2');
+            const results = document.getElementById('results2');
+            const error = document.getElementById('error2');
+            
+            // Show loading, hide results and errors
+            loading.classList.add('show');
+            results.classList.remove('show');
+            error.classList.remove('show');
+            
+            const formData = {
+                mode: 'nails_to_outfit',
+                nail_color: document.getElementById('nailColor').value,
+                nail_shade: document.getElementById('nailShade').value,
+                polish_type: document.getElementById('polishType').value
+            };
+            
+            fetch('/fashion-advice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.remove('show');
+                
+                if (data.error) {
+                    error.textContent = data.error;
+                    error.classList.add('show');
+                } else {
+                    displayOutfitResults(data);
+                }
+            })
+            .catch(err => {
+                loading.classList.remove('show');
+                error.textContent = 'Error connecting to the server. Make sure the API is running.';
+                error.classList.add('show');
+            });
+        });
+
+        function displayNailResults(data) {
+            const results = document.getElementById('results1');
+            results.innerHTML = `
+                <div class="result-item">
+                    <h3>💅 Classic Option</h3>
+                    <div class="color-preview" style="background-color: ${data.classic.hex}"></div>
+                    <strong>${data.classic.name} - ${data.classic.shade}</strong><br>
+                    <em>Polish Type: ${data.classic.polish_type}</em><br>
+                    <small>Hex: ${data.classic.hex}</small>
+                </div>
+                
+                <div class="result-item">
+                    <h3>💅 Bold Option</h3>
+                    <div class="color-preview" style="background-color: ${data.bold.hex}"></div>
+                    <strong>${data.bold.name} - ${data.bold.shade}</strong><br>
+                    <em>Polish Type: ${data.bold.polish_type}</em><br>
+                    <small>Hex: ${data.bold.hex}</small>
+                </div>
+            `;
+            results.classList.add('show');
+        }
+
+        function displayOutfitResults(data) {
+            const results = document.getElementById('results2');
+            results.innerHTML = `
+                <div class="result-item">
+                    <h3>👕 Casual Outfit</h3>
+                    <p><strong>Top:</strong> ${data.casual.top}</p>
+                    <p><strong>Bottom:</strong> ${data.casual.bottom}</p>
+                    <p><strong>Shoes:</strong> ${data.casual.shoes}</p>
+                    <p><strong>Accessories:</strong> ${data.casual.accessories}</p>
+                </div>
+                
+                <div class="result-item">
+                    <h3>✨ Dressy Outfit</h3>
+                    <p><strong>Top:</strong> ${data.dressy.top}</p>
+                    <p><strong>Bottom:</strong> ${data.dressy.bottom}</p>
+                    <p><strong>Shoes:</strong> ${data.dressy.shoes}</p>
+                    <p><strong>Accessories:</strong> ${data.dressy.accessories}</p>
+                </div>
+            `;
+            results.classList.add('show');
+        }
+    </script>
+</body>
+</html>
